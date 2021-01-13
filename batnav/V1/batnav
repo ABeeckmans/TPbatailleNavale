@@ -1,0 +1,979 @@
+ALGORITHME: Bataille navale
+//BUT: creer un jeu de bataille navale
+//ENTREE: Les cases vises
+//SORTIE : le gagnant de la partie
+
+
+
+TYPE
+	//ce type a ete cree afin de pouvoir appeler des tableaux en argument de procedures et fonctions
+	tab = Tableau[1..10,1..10] de CARACTERE
+
+
+VAR
+	//il s'agit du tableau qui apparaitra au tour du joueur 1
+	TabJ1 : Tableau[1..10,1..10] de CARACTERE
+
+	//tableau  contenant les bateaux placés par le joueur 1
+	TabJ1_selec : Tableau[1..10,1..10] de CARACTERE
+
+	//il s'agit du tableau qui apparaitra au tour du joueur 2
+	TabJ2 : Tableau[1..10,1..10] de CARACTERE
+
+	//tableau  contenant les bateaux placés par le joueur 2
+	TabJ2_selec : Tableau[1..10,1..10] de CARACTERE
+
+	//il s agit d un tableau vide qui sera utilise comme argument non influent sur le programme
+	Tab_vide : Tableau[1..10,1..10] de CARACTERE
+
+	intro, joueur1 : BOOLEEN
+
+	i, viesJ1, viesJ2, tour_creation_bateau : ENTIER
+
+	nomJ1, nomJ2, coordonees : CHAINE
+
+
+
+
+
+	//donnes relatives aux bateaux du J1
+	porteavionJ1 : Tableau[1..5] de CHAINE
+	croiseurJ1 : Tableau[1..4] de CHAINE
+	contretorpilleur1J1 : Tableau[1..3] de CHAINE
+	contretorpilleur2J1 : Tableau[1..3] de CHAINE
+	torpilleurJ1 : Tableau[1..2] de CHAINE
+	porteavionJ1_vies, croiseurJ1_vies, contretorpilleur1J1_vies, contretorpilleur2J1_vies, torpilleurJ1_vies : ENTIER
+
+
+
+	//donnees relatives aux bateaux du J2
+	porteavionJ2 : Tableau[1..5] de CHAINE
+	croiseurJ2 : Tableau[1..4] de CHAINE
+	contretorpilleur1J2 : Tableau[1..3] de CHAINE
+	contretorpilleur2J2 : Tableau[1..3] de CHAINE
+	torpilleurJ2 : Tableau[1..2] de CHAINE
+	porteavionJ2_vies, croiseurJ2_vies, contretorpilleur1J2_vies, contretorpilleur2J2_vies, torpilleurJ2_vies : ENTIER
+
+
+
+
+procedure noms(VAR nom1, nom2 : CHAINE)
+//BUT Determiner le nom des joueurs
+//ENTREE des chaines de caracteres
+//SORTIE
+
+DEBUT
+	TANTQUE (nom1 = "") FAIRE
+	DEBUT
+		ECRRIRE "Joueur 1, quel est votre nom"
+		LIRE nom1
+	FINTANTQUE
+
+	TANTQUE (nom2 = "") FAIRE
+	DEBUT
+		ECRIRE"Joueur 2, quel est votre nom"
+		LIRE nom2
+	FIN
+
+FIN
+
+
+
+//cette procedure remplacera la valeur de chaque case d un tableau par des 'O'
+procedure initialisation (VAR tableau : tab)
+
+//BUT: remplacer les valeurs du tableau par des O
+//ENTREE rien
+//SORTIE rien
+
+VAR
+	i,j : ENTIER
+
+
+DEBUT
+	POUR i DE 1 A 10 FAIRE
+	DEBUT
+		POUR j DE 1 A 10 FAIRE
+		DEBUT
+			tableau[i,j] <-- 'O'
+		FIN
+	FIN
+FIN
+
+
+
+//cette procedure affichera la carte ainsi que le nom des lignes/colonnes au joueur
+procedure affichage (VAR tableau : tab)
+
+VAR
+	i,j : ENTIER
+
+DEBUT
+	ECRIRE"  A B C D E F G H I J"
+
+	POUR i DE 1 A 10 FAIRE
+	DEBUT
+		ECRIRE (i-1) + ' '
+		POUR j DE 1 A 10 FAIRE
+		DEBUT
+			ECRIRE tableau[i,j] + ' '
+		FIN
+	FIN
+FIN
+
+
+
+
+procedure position (VAR tableau : tab; VAR horizontale, verticale : ENTIER; VAR selection_valide : BOOLEEN)
+//BUT empecher de joueur de diviser ses bateaux ou de les placer cote a cote et selectionner les cases affichant un bateau
+
+
+DEBUT
+		//le debut de cette procedure permet de verifier que le joueur ne divise pas son bateau
+					cas tour_creation_bateau PARMI
+					CAS 1:	
+								//on regarde toute les cases autour de la case selectionnee pour que le joueur ne colle pas de bateaux
+								//DEBUT de la condition 1************************************************************************************************************************
+								SI 
+								(  ((horizontale > 1) ET (horizontale < 10) ET (verticale > 1) ET (verticale < 10))
+								ET ((tableau[horizontale+1, verticale] <> 'X') ET (tableau[horizontale-1, verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X') 
+								ET (tableau[horizontale, verticale + 1] <> 'X'))  )
+
+								OU
+								//meme regard mais pour les coins
+								((horizontale = 1) ET (verticale = 1) ET (tableau[horizontale + 1,verticale] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X'))
+
+								OU
+
+								((horizontale = 10) ET (verticale = 1) ET (tableau[horizontale - 1,verticale] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X'))
+
+								OU
+
+								((horizontale = 10) ET (verticale = 10) ET (tableau[horizontale - 1,verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X'))
+
+								OU
+
+								((horizontale = 1) ET (verticale = 10) ET (tableau[horizontale+1,verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X'))
+
+								OU
+								//meme recherche mais pour les cases sur les cotes
+								(  ((horizontale = 1) ET (verticale < 10) ET (verticale > 1)) 
+								ET (tableau[horizontale+1,verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X')  )
+
+								OU
+
+								(  ((horizontale = 10) ET (verticale < 10) ET (verticale > 1))
+								ET (tableau[horizontale-1,verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X')  )
+
+								OU
+
+								(  ((verticale = 1) ET (horizontale < 10) ET (horizontale > 1))
+								ET (tableau[horizontale-1,verticale] <> 'X') ET (tableau[horizontale + 1, verticale] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X')  )
+
+								OU
+
+								(  ((verticale = 10) ET (horizontale < 10) ET (horizontale > 1)) 
+								ET (tableau[horizontale-1,verticale] <> 'X') ET (tableau[horizontale + 1, verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X')  ) ALORS
+								//FIN de la condition 1 ****************************************************************************************************************************************
+								begin
+									selection_valide <-- VRAI
+								end
+								else
+
+								begin
+									affichage(tableau);
+									ECRIRE"Vous ne pouvez pas poser des bateaux cote a cote"
+								end;
+
+						CAS 2:
+								//on scanne les cases autour et on regarde si il y a bien le bateau en construction autour, afin de ne pas pouvoir le decouper
+								//et si il n y a pas deja un bateau autour
+								//DEBUT de la condition 2 *****************************************************************************************************************************************
+								SI ((horizontale > 1) ET (horizontale < 10) ET (verticale > 1) ET (verticale < 10)) ET ((tableau[horizontale+1, verticale] = 'W') 
+								OU (tableau[horizontale-1, verticale] = 'W') OU (tableau[horizontale, verticale - 1] = 'W') OU (tableau[horizontale, verticale + 1] = 'W'))
+								ET((tableau[horizontale+1, verticale] <> 'X') ET (tableau[horizontale-1, verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X') 
+								ET (tableau[horizontale, verticale + 1] <> 'X')) 
+
+								OU
+								//la meme chose mais pour les coins
+								((horizontale = 1) ET (verticale = 1) ET (tableau[horizontale+1,verticale] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X')
+									ET ((tableau[horizontale + 1, verticale] = 'W') OU (tableau[horizontale, verticale + 1] = 'W')))
+
+								OU
+
+								 ((horizontale = 10) ET (verticale = 1) ET (tableau[horizontale - 1,verticale] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X')
+									ET ((tableau[horizontale - 1, verticale] = 'W') OU (tableau[horizontale, verticale + 1] = 'W')))
+
+								OU
+
+								((horizontale = 10) ET (verticale = 10) ET (tableau[horizontale-1,verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X')
+									ET ((tableau[horizontale - 1, verticale] = 'W') OU (tableau[horizontale, verticale - 1] = 'W')))
+
+								OU
+
+								((horizontale = 1) ET (verticale = 10) ET (tableau[horizontale+1,verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X')
+									ET ((tableau[horizontale + 1, verticale] = 'W') OU (tableau[horizontale, verticale - 1] = 'W')))
+
+								OU
+								//meme chose pour les cotes
+								(((horizontale = 1) ET (verticale > 1) ET (verticale < 10)) 
+								ET ((tableau[horizontale+1, verticale] = 'W') OU (tableau[horizontale, verticale - 1] = 'W') OU (tableau[horizontale, verticale + 1] = 'W'))
+								ET((tableau[horizontale+1, verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X')))
+
+								OU
+
+								(((horizontale = 10) ET (verticale > 1) ET (verticale < 10)) 
+								ET ((tableau[horizontale - 1, verticale] = 'W') OR (tableau[horizontale, verticale - 1] = 'W') OR (tableau[horizontale, verticale + 1] = 'W'))
+								ET ((tableau[horizontale - 1, verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X')))
+
+								OU
+
+
+								(((verticale = 1) ET (horizontale > 1) ET (horizontale < 10)) 
+								ET ((tableau[horizontale + 1, verticale] = 'W') OR (tableau[horizontale - 1, verticale] = 'W') OU (tableau[horizontale, verticale + 1] = 'W'))
+								ET ((tableau[horizontale + 1, verticale] <> 'X') ET (tableau[horizontale -1, verticale] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X'))) 
+
+								OU
+
+								(((verticale = 10) ET (horizontale > 1) ET (horizontale < 10)) 
+								ET ((tableau[horizontale + 1, verticale] = 'W') OU (tableau[horizontale - 1, verticale] = 'W') OU (tableau[horizontale, verticale - 1] = 'W'))
+								ET ((tableau[horizontale + 1, verticale] <> 'X') ET (tableau[horizontale -1, verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X'))) 
+								
+
+								ALORS
+								
+
+								//FIN de la condition 2************************************************************************************************************************************
+
+
+
+								DEBUT
+									selection_valide <-- VRAI
+								SINON
+									affichage(tableau);
+									ECRIRE tour_creation_bateau
+									ECRIRE "Veuillez selectionner une case valide"
+								FINSI
+
+						
+						CASPARDEFAUT :
+								//on scanne les cases autour et on regarde si il y a bien le bateau en construction autour, afin de ne pas pouvoir le decouper
+								//et si il n y a pas deja un bateau autour
+								//debut de la condition 3 ************************************************************************************************************************************
+								SI 
+								(   ((horizontale > 2) ET (horizontale < 9) ET (verticale > 1) ET (verticale < 10)) 
+								ET(  ((tableau[horizontale + 1, verticale] = 'W') ET (tableau[horizontale + 2, verticale] = 'W'))
+								OU    ((tableau[horizontale - 1, verticale] = 'W') ET (tableau[horizontale - 2, verticale] = 'W'))
+								OU    ((tableau[horizontale, verticale - 1] = 'W') ET (tableau[horizontale, verticale - 2] = 'W'))
+								OU    ((tableau[horizontale, verticale + 1] = 'W') ET (tableau[horizontale, verticale + 2] = 'W'))  )
+								ET(  (tableau[horizontale+1, verticale] <> 'X') ET (tableau[horizontale-1, verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X') 
+								ET (tableau[horizontale, verticale + 1] <> 'X')  )   )
+
+
+								OU
+
+
+								//la meme chose mais pour les coins
+								(  ((horizontale = 1) ET (verticale = 1))
+								ET ((tableau[horizontale + 1,verticale] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X'))
+								ET (  ((tableau[horizontale + 1, verticale] = 'W') ET (tableau[horizontale + 2, verticale] = 'W'))
+								OU     ((tableau[horizontale, verticale + 1] = 'W') ET (tableau[horizontale, verticale + 2] = 'W'))  )  )
+
+								OU
+
+								(  ((horizontale = 1) ET (verticale = 10))
+								ET ((tableau[horizontale+1,verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X'))
+								ET (  ((tableau[horizontale + 1, verticale] = 'W') ET (tableau[horizontale + 2, verticale] = 'W'))
+								OU     ((tableau[horizontale, verticale - 1] = 'W') ET (tableau[horizontale, verticale - 2] = 'W'))  )  )
+
+								OU
+
+								(  ((horizontale = 10) ET (verticale = 10))
+								ET ((tableau[horizontale - 1,verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X'))
+								ET (  ((tableau[horizontale - 1, verticale] = 'W') ET (tableau[horizontale - 2, verticale] = 'W'))
+								OU     ((tableau[horizontale, verticale - 1] = 'W') ET (tableau[horizontale, verticale - 2] = 'W'))  )  )
+
+
+								OU
+
+								(  ((horizontale = 10) ET (verticale = 1))
+								ET ((tableau[horizontale - 1,verticale] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X'))
+								ET (  ((tableau[horizontale - 1, verticale] = 'W') ET (tableau[horizontale - 2, verticale] = 'W'))
+								OU     ((tableau[horizontale, verticale + 1] = 'W') ET (tableau[horizontale, verticale + 2] = 'W'))  )  )
+
+
+								OU
+								//8 cases sur les cotes qui peuvent poser souci
+								//1
+								(  ((horizontale = 2) ET (verticale = 1)) 
+								ET(  (tableau[horizontale - 1, verticale] <> 'X') ET (tableau[horizontale + 1, verticale] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X')  )
+								ET(  ((tableau[horizontale + 1, verticale] = 'W') ET (tableau[horizontale + 2, verticale] = 'W'))
+								OU    ((tableau[horizontale, verticale + 1] = 'W') ET (tableau[horizontale, verticale + 2] = 'W'))  )  )
+
+								OU
+								//2
+								(  ((horizontale = 9) ET (verticale = 1)) 
+								ET(  (tableau[horizontale - 1, verticale] <> 'X') ET (tableau[horizontale + 1, verticale] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X')  )
+								ET( ((tableau[horizontale - 1, verticale] = 'W') ET (tableau[horizontale - 2, verticale] = 'W'))
+								OU   ((tableau[horizontale, verticale + 1] = 'W') ET (tableau[horizontale, verticale + 2] = 'W'))  )  )
+
+								OU
+								//3
+								(  ((horizontale = 10) ET (verticale = 2)) 
+								ET(  (tableau[horizontale - 1, verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X')  )
+								ET(  ((tableau[horizontale - 1, verticale] = 'W') ET (tableau[horizontale - 2, verticale] = 'W'))
+								OU    ((tableau[horizontale, verticale + 1] = 'W') ET (tableau[horizontale, verticale + 2] = 'W'))  )  )
+
+								OU
+								//4
+								(  ((horizontale = 10) ET (verticale = 9)) 
+								ET(  (tableau[horizontale - 1, verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X')  )
+								ET(  ((tableau[horizontale - 1, verticale] = 'W') ET (tableau[horizontale - 2, verticale] = 'W'))
+								OU    ((tableau[horizontale, verticale - 1] = 'W') ET (tableau[horizontale, verticale - 2] = 'W'))  )  )
+
+								OU
+								//5
+								(  ((horizontale = 9) ET (verticale = 10)) 
+								ET(  (tableau[horizontale - 1, verticale] <> 'X') ET (tableau[horizontale + 1, verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X')  )
+								ET(  ((tableau[horizontale - 1, verticale] = 'W') ET (tableau[horizontale - 2, verticale] = 'W'))
+								OU    ((tableau[horizontale, verticale - 1] = 'W') ET (tableau[horizontale, verticale - 2] = 'W'))  )  )
+
+								OU
+								//6
+								(  ((horizontale = 2) ET (verticale = 10)) 
+								ET(  (tableau[horizontale - 1, verticale] <> 'X') ET (tableau[horizontale + 1, verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X')  )
+								ET(  ((tableau[horizontale + 1, verticale] = 'W') ET (tableau[horizontale + 2, verticale] = 'W'))
+								OU    ((tableau[horizontale, verticale - 1] = 'W') ET (tableau[horizontale, verticale - 2] = 'W'))  )  )
+
+								OU
+								//7
+								(  ((horizontale = 1) ET (verticale = 9)) 
+								ET(  (tableau[horizontale + 1, verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X')  )
+								ET(  ((tableau[horizontale + 1, verticale] = 'W') ET (tableau[horizontale + 2, verticale] = 'W'))
+								OU    ((tableau[horizontale, verticale - 1] = 'W') ET (tableau[horizontale, verticale - 2] = 'W'))  )  )
+
+
+								OU
+								//8
+								(  ((horizontale = 1) ET (verticale = 2)) 
+								ET(  (tableau[horizontale + 1, verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X')  )
+								ET(  ((tableau[horizontale + 1, verticale] = 'W') ET (tableau[horizontale + 2, verticale] = 'W'))
+								OU    ((tableau[horizontale, verticale + 1] = 'W') ET (tableau[horizontale, verticale + 2] = 'W'))  )  )
+
+								OU
+								//meme chose pour les cotes
+								//1
+								(  ((horizontale = 1) ET (verticale > 2) ET (verticale < 9)) 
+								ET ( ((tableau[horizontale + 1, verticale] = 'W') ET (tableau[horizontale + 2, verticale] = 'W'))
+								OU    ((tableau[horizontale, verticale - 1] = 'W') ET (tableau[horizontale, verticale - 2] = 'W'))
+								OU    ((tableau[horizontale, verticale + 1] = 'W') ET (tableau[horizontale, verticale + 2] = 'W')) )
+								ET ((tableau[horizontale + 1, verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X'))  )
+
+								OU
+								//2
+								(  ((horizontale = 10) ET (verticale > 2) ET (verticale < 9)) 
+								ET ( ((tableau[horizontale - 1, verticale] = 'W') ET (tableau[horizontale - 2, verticale] = 'W'))
+								OU    ((tableau[horizontale, verticale - 1] = 'W') ET (tableau[horizontale, verticale - 2] = 'W'))
+								OU    ((tableau[horizontale, verticale + 1] = 'W') ET (tableau[horizontale, verticale + 2] = 'W')) )
+								ET ((tableau[horizontale - 1, verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X'))  )
+
+								OU
+								//3
+								(  ((verticale = 1) ET (horizontale > 2) ET (horizontale < 9)) 
+								ET ( ((tableau[horizontale + 1, verticale] = 'W') ET (tableau[horizontale + 2, verticale] = 'W'))
+								OU    ((tableau[horizontale - 1, verticale] = 'W') ET (tableau[horizontale - 2, verticale] = 'W'))
+								OU    ((tableau[horizontale, verticale + 1] = 'W') ET (tableau[horizontale, verticale + 2] = 'W')) )
+								ET((tableau[horizontale + 1, verticale] <> 'X') ET (tableau[horizontale - 1, verticale] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X'))  )
+
+								OU
+								//4
+								(  ((verticale = 10) ET (horizontale > 2) ET (horizontale < 9)) 
+								ET ( ((tableau[horizontale + 1, verticale] = 'W') ET (tableau[horizontale + 2, verticale] = 'W'))
+								OU    ((tableau[horizontale - 1, verticale] = 'W') ET (tableau[horizontale - 2, verticale] = 'W'))
+								OU    ((tableau[horizontale, verticale - 1] = 'W') ET (tableau[horizontale, verticale - 2] = 'W')) )
+								ET((tableau[horizontale + 1, verticale] <> 'X') ET (tableau[horizontale - 1, verticale] <> 'X') ET (tableau[horizontale, verticale - 1] <> 'X'))  )
+
+
+
+
+								OU
+								//la meme chose pour les coins a 2 de distance
+								//1
+								(  ((horizontale = 2) ET (verticale = 2))
+								ET ( ((tableau[horizontale + 1, verticale] = 'W') ET (tableau[horizontale + 2, verticale] = 'W'))
+								OU    ((tableau[horizontale, verticale + 1] = 'W') ET (tableau[horizontale, verticale + 2] = 'W'))  )
+								ET ( (tableau[horizontale + 1, verticale] <> 'X') ET (tableau[horizontale - 1, verticale] <> 'X')
+								ET   (tableau[horizontale, verticale + 1] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X')  )  )
+
+								OU
+								//2
+								(  ((horizontale = 2) ET (verticale = 9))
+								ET ( ((tableau[horizontale + 1, verticale] = 'W') ET (tableau[horizontale + 2, verticale] = 'W'))
+								OU    ((tableau[horizontale, verticale - 1] = 'W') ET (tableau[horizontale, verticale - 2] = 'W'))  )
+								ET ( (tableau[horizontale + 1, verticale] <> 'X') ET (tableau[horizontale - 1, verticale] <> 'X')
+								ET   (tableau[horizontale, verticale + 1] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X')  )  )
+
+								OU
+								//3
+								(  ((horizontale = 9) ET (verticale = 2))
+								ET ( ((tableau[horizontale - 1, verticale] = 'W') ET (tableau[horizontale - 2, verticale] = 'W'))
+								OU    ((tableau[horizontale, verticale + 1] = 'W') ET (tableau[horizontale, verticale + 2] = 'W'))  )
+								ET ( (tableau[horizontale + 1, verticale] <> 'X') ET (tableau[horizontale - 1, verticale] <> 'X')
+								ET   (tableau[horizontale, verticale + 1] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X')  )  )
+
+								OU
+								//4
+								(  ((horizontale = 9) ET (verticale = 9))
+								ET ( ((tableau[horizontale - 1, verticale] = 'W') ET (tableau[horizontale - 2, verticale] = 'W'))
+								OU    ((tableau[horizontale, verticale - 1] = 'W') ET (tableau[horizontale, verticale - 2] = 'W'))  )
+								ET ( (tableau[horizontale + 1, verticale] <> 'X') ET (tableau[horizontale - 1, verticale] <> 'X')
+								ET   (tableau[horizontale, verticale + 1] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X')  )  )
+
+								OU
+								//meme chose pour les cotes a deux de distance
+								//1
+								( ((horizontale = 2) ET (verticale > 2) ET (verticale < 9))
+								ET (  ((tableau[horizontale + 1, verticale] = 'W') ET (tableau[horizontale + 2, verticale] = 'W'))
+								OU 	   ((tableau[horizontale, verticale - 1] = 'W') ET (tableau[horizontale, verticale - 2] = 'W'))
+								OU     ((tableau[horizontale, verticale + 1] = 'W') ET (tableau[horizontale, verticale + 2] = 'W'))  )
+								ET ( (tableau[horizontale + 1, verticale] <> 'X') ET (tableau[horizontale - 1, verticale] <> 'X')
+								ET   (tableau[horizontale, verticale + 1] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X')  )  )
+
+								OU
+								//2
+								( ((horizontale = 9) ET (verticale > 2) ET (verticale < 9))
+								ET (  ((tableau[horizontale - 1, verticale] = 'W') ET (tableau[horizontale - 2, verticale] = 'W'))
+								OU 	   ((tableau[horizontale, verticale - 1] = 'W') ET (tableau[horizontale, verticale - 2] = 'W'))
+								OU     ((tableau[horizontale, verticale + 1] = 'W') ET (tableau[horizontale, verticale + 2] = 'W'))
+									)
+								ET ( (tableau[horizontale + 1, verticale] <> 'X') ET (tableau[horizontale - 1, verticale] <> 'X')
+								ET	  (tableau[horizontale, verticale + 1] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X')
+									)
+								)
+
+								OU
+								//3
+								( ((verticale = 2) ET (horizontale > 2) ET (horizontale < 9))
+								ET (  ((tableau[horizontale, verticale + 1] = 'W') ET (tableau[horizontale, verticale + 2] = 'W'))
+								OU 	   ((tableau[horizontale - 1, verticale] = 'W') ET (tableau[horizontale - 2, verticale] = 'W'))
+								OU     ((tableau[horizontale + 1, verticale] = 'W') ET (tableau[horizontale + 2, verticale] = 'W'))
+									)
+								ET ( (tableau[horizontale + 1, verticale] <> 'X') ET (tableau[horizontale - 1, verticale] <> 'X')
+								ET	  (tableau[horizontale, verticale + 1] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X')
+									)
+								)
+
+								OU
+								//4
+								( ((verticale = 9) ET (horizontale > 2) ET (horizontale < 9))
+								ET (  ((tableau[horizontale + 1, verticale] = 'W') ET (tableau[horizontale + 2, verticale] = 'W'))
+								OU 	   ((tableau[horizontale - 1, verticale] = 'W') ET (tableau[horizontale - 2, verticale] = 'W'))
+								OU     ((tableau[horizontale, verticale - 1] = 'W') ET (tableau[horizontale, verticale - 2] = 'W'))
+									)
+								ET ( (tableau[horizontale + 1, verticale] <> 'X') ET (tableau[horizontale - 1, verticale] <> 'X')
+								ET   (tableau[horizontale, verticale + 1] <> 'X') ET (tableau[horizontale, verticale + 1] <> 'X')
+									)
+								) ALORS
+
+
+
+								//FIN de la condition 3********************************************************************************************************************************************
+								DEBUT
+									selection_valide <-- VRAI
+								SINON
+									affichage(tableau)
+									ECRIRE "Veuillez selectionner une case valide"
+								FINSI
+
+	SI selection_valide = VRAI ALORS
+	DEBUT
+		tableau[horizontale, verticale] <-- 'W' // on rentre ce caractere afin de reconnaitre le tableau deja rentre et de differencier les touches du bateau en cours de formation, de celles d un bateau deja forme
+	FINSI
+FIN
+
+//procedure permettant de changer tout les W en X
+procedure WtoX (VAR tableau : tab)
+VAR
+	i,j : ENTIER;
+
+DEBUT
+	POUR i DE 1 A 10 FAIRE
+	DEBUT
+		POUR j DE 1 A 10 FAIRE
+		DEBUT
+			SI tableau[i,j] = 'W' ALORS
+			DEBUT
+				tableau[i,j] <-- 'X'
+			FINSI
+		FINPOUR
+	FINPOUR
+FIN
+
+//procedure permettant au joueur de selectionner une case
+procedure selection (VAR tableau, tableau_selec : tab)
+
+VAR
+	horizontale, verticale : ENTIER
+
+VAR
+	valide_lettre, valide_chiffre, choix_valide, selection_valide : BOOLEEN;
+
+procedure touche_ou_coule (VAR tableau, tableau_selec : tab; horizontale, verticale : entier)
+//BUT verifier si l assaillant touche ou non un bateau
+
+procedure verif_coule (VAR porteavion_vies, croiseur_vies, contretorpilleur1_vies, contretorpilleur2_vies, torpilleur_vies : entier)
+//BUT cette procedure permet de verifier si le bateau touché est coulé
+
+VAR
+	i : ENTIER
+DEBUT
+		//porte-avion
+		POUR i DE 1 A 5 FAIRE
+		DEBUT
+
+			CAS joueur1 PARMI
+				FAUX:		SI coordonees = porteavionJ1[i] ALORS
+							DEBUT
+								porteavion_vies <-- porteavion_vies - 1
+							FINSI
+				VRAI:		SI coordonees = porteavionJ2[i] ALORS
+							DEBUT
+								porteavion_vies <-- porteavion_vies - 1
+							FINSI
+			FINCASPARMI
+		FINPOUR
+		SI porteavion_vies = 0 ALORS
+		DEBUT
+			ECRIRE"porteavion coule"
+			porteavion_vies <-- porteavion_vies - 1 //on descend sa valeur à -1 afin que celui-ci ne soit pas rappele
+		FINSI
+
+		
+		//croiseur
+		FOR i DE 1 A 4 FAIRE
+		DEBUT
+
+			CAS joueur1 PARMI
+				FAUX:	if coordonees = croiseurJ1[i] ALORS
+						DEBUT
+							croiseur_vies <-- croiseur_vies - 1
+						FINSI
+				VRAI:	
+						SI coordonees = croiseurJ2[i] ALORS
+						DEBUT
+							croiseur_vies <-- croiseur_vies - 1
+						FINSI
+			FINCASPARMI
+		FINPOUR
+		SI croiseur_vies = 0 ALORS
+		DEBUT
+			ECRIRE"Croiseur coule"
+			croiseur_vies <-- croiseur_vies - 1 //on descend sa valeur à -1 afin que celui-ci ne soit pas rappele
+		FINSI
+
+		POUR i DE 1 A 3 FAIRE
+		DEBUT
+
+			CAS joueur1 PARMI
+				FAUX:	SI coordonees = contretorpilleur1J1[i] ALORS
+						DEBUT
+							contretorpilleur1_vies <-- contretorpilleur1_vies - 1
+						FINSI
+				VRAI:	SI coordonees = contretorpilleur1J2[i] ALORS
+						DEBUT
+							contretorpilleur1_vies <-- contretorpilleur1_vies - 1
+						FINSI
+			FINCASPARMI
+		FINPOUR
+		SI contretorpilleur1_vies = 0 ALORS
+		DEBUT
+			ECRIRE"Contre-Torpilleur 1 coule"
+			contretorpilleur1_vies <-- contretorpilleur1_vies - 1 //on descend sa valeur à -1 afin que celui-ci ne soit pas rappele
+		FIN
+
+		POUR i DE 1 A 3 FAIRE
+		DEBUT
+
+			CAS joueur1 PARMI
+				FAUX:	SI coordonees = contretorpilleur2J1[i] ALORS
+						DEBUT
+							contretorpilleur2_vies <-- contretorpilleur2_vies - 1
+						FIN
+				VRAI:	SI coordonees = contretorpilleur2J2[i] ALORS
+						DEBUT
+							contretorpilleur2_vies <-- contretorpilleur2_vies - 1
+						FINSI
+			FINCASPARMI
+		FINPOUR
+		SI contretorpilleur2_vies = 0 ALORS
+		DEBUT
+			ECRIRE"Contre-Torpilleur 2 coule"
+			contretorpilleur2_vies <-- contretorpilleur2_vies - 1 //on descend sa valeur à -1 afin que celui-ci ne soit pas rappele
+		FINSI
+
+		POUR i DE 1 A 2 FAIRE
+		DEBUT
+
+			CAS joueur1 PARMI
+				FAUX:	SI coordonees = torpilleurJ1[i] ALORS
+						DEBUT
+							torpilleur_vies <-- torpilleur_vies - 1
+						FINSI
+				VRAI:	SI coordonees = torpilleurJ2[i] ALORS
+						DEBUT
+							torpilleur_vies <-- torpilleur_vies - 1
+						FINSI
+			FINCASPARMI
+		FINPOUR
+		SI torpilleur_vies = 0 ALORS
+		DEBUT
+			ECRIRE"Torpilleur  coule"
+			torpilleur_vies <-- torpilleur_vies - 1 //on descend sa valeur à -1 afin que celui-ci ne soit pas rappele
+		FIN
+
+FIN
+
+
+//procedure touche_ou_coule*********************************************
+DEBUT
+	SI tableau_selec[horizontale, verticale] = 'X' ALORS
+	DEBUT
+		ECRIRE"Touche"
+		tableau[horizontale, verticale] <-- '*'
+		SI joueur1 = VRAI ALORS
+		DEBUT
+			viesJ2 <-- viesJ2 - 1
+			verif_coule(porteavionJ1_vies, croiseurJ1_vies, contretorpilleur1J1_vies, contretorpilleur2J1_vies, torpilleurJ1_vies)
+		SINON
+			viesJ1 <-- viesJ1 - 1
+			verif_coule(porteavionJ2_vies, croiseurJ2_vies, contretorpilleur1J2_vies, contretorpilleur2J2_vies, torpilleurJ2_vies)
+		FINSI
+	SINON
+		ECRIRE"Dans l eau"
+	    tableau[horizontale, verticale] <-- 'X'
+	FINSI
+	tableau_selec[horizontale, verticale] <-- '*'
+	selection_valide<-- VRAI
+
+FIN
+
+// procedure selection ***************************
+DEBUT
+
+	valide_lettre <-- FAUX
+	valide_chiffre <-- FAUX
+	choix_valide <-- FAUX
+	selection_valide <-- FAUX
+
+	TANTQUE selection_valide = FAUX FAIRE
+	DEBUT
+		valide_lettre <-- FAUX
+		valide_chiffre <-- FAUX
+		choix_valide <-- FAUX
+		TANTQUE (choix_valide = FAUX) FAIRE
+		DEBUT
+			valide_lettre <-- FAUX
+			valide_chiffre <-- FAUX // pour reinitialiser la selection
+			TANTQUE (valide_chiffre = FAUX) or (valide_lettre = FAUX) FAIRE
+			DEBUT
+				coordonees <-- ' ' //on reinitialise la variable avant que le joueur rentre une nouvelle valeur pour eviter que coordonees garde la valeur precedente si l utilisateur ne rentre rien
+				LIRE coordonees
+				CAS coordonees[1] PARMI
+					CAS 'A':	verticale <-- 1
+								valide_lettre <-- VRAI
+					CAS'B':		verticale <-- 2
+								valide_lettre <-- VRAI
+					CAS'C': 	verticale <-- 3
+						 		valide_lettre <-- VRAI
+					CAS'D': 	verticale <-- 4
+								valide_lettre <-- VRAI
+					CAS'E': 	verticale <-- 5
+								valide_lettre <-- VRAI
+					CAS'F': 	verticale <-- 6
+								valide_lettre <-- VRAI
+					CAS'G': 	verticale <-- 7
+								valide_lettre <-- VRAI
+					CAS'H': 	verticale <-- 8
+								valide_lettre <-- VRAI
+					CAS'I': 	verticale <-- 9
+								valide_lettre <-- VRAI
+					CAS'J': 	verticale <-- 10
+								valide_lettre <-- VRAI
+				FINCASPARMI
+
+
+				CAS coordonees[2] PARMI
+						CAS'0': horizontale <-- 1
+								valide_chiffre <-- VRAI
+						CAS'1': horizontale <-- 2
+								valide_chiffre <-- VRAI
+						CAS'2': horizontale <-- 3
+								valide_chiffre <-- VRAI
+						CAS'3': horizontale <-- 4
+								valide_chiffre <-- VRAI
+						CAS'4': horizontale <-- 5
+								valide_chiffre <-- VRAI
+						CAS'5': horizontale <-- 6
+								valide_chiffre <-- VRAI
+						CAS'6': horizontale <-- 7
+								valide_chiffre <-- VRAI
+						CAS'7': horizontale <-- 8
+								valide_chiffre <-- VRAI
+						CAS'8': horizontale <-- 9
+								valide_chiffre <-- VRAI
+						CAS'9': horizontale <-- 10
+								valide_chiffre <-- VRAI
+				FINCASPARMI
+				
+
+
+				
+
+
+
+
+
+				//on verifie si l utilisateur a bien rentre une lettre correcte et un chiffre
+				SI (valide_chiffre = FAUX) OR (valide_lettre = FAUX) ALORS
+				DEBUT
+					ECRIRE"Veuillez entrer une case valide"
+				FINSI
+			FINTANTQUE
+			
+			//on verifie si le joueur n a pas deja selectionne la case en question
+			SI (tableau[horizontale, verticale] = 'X') OR (tableau[horizontale, verticale] = '*') OU (tableau[horizontale, verticale] = 'W') ALORS
+			DEBUT
+				ECRIRE"case deja attaquee"
+			SINON
+				choix_valide <-- VRAI
+			FINSI
+		FINTANTQUE
+
+
+
+		SI intro = FAUX ALORS
+			touche_ou_coule(tableau, tableau_selec, horizontale, verticale)
+		SINON
+			position(tableau, horizontale, verticale, selection_valide)
+		FINSI
+	FINTANTQUE
+
+FIN
+
+
+procedure premiere_phase (VAR tableau : tab)
+
+VAR
+	i,j : ENTIER
+
+DEBUT
+
+	POUR i <-- 1 to 5 FAIRE
+	DEBUT
+		ECRIRE "Veuillez entrer la " + i + "eme case de votre porte avion (5 cases)"
+		tour_creation_bateau <-- i
+		selection(tableau, Tab_vide) // on rajoute un espace vide afin d'avoir le nombre correct d'arguments mais celui-ci n'influence pas le code
+		
+		// la case selectionne par le joueur rentre dans le tableau
+		//on rajoute la valeur entree par le joueur dans un tableau approprie a son bateau
+		SI joueur1 = VRAI ALORS
+		DEBUT
+			porteavionJ1[i] <-- coordonees
+		SINON
+			porteavionJ2[i] <-- coordonees
+		FINSI
+		affichage(tableau)
+	FINPOUR
+	WtoX(tableau)
+	affichage(tableau)
+
+
+	POUR i DE 1 A 4 FAIRE
+	DEBUT
+		ECRIRE "Veuillez entrer la " + i + "eme case de votre Croiseur (4 cases)"
+		tour_creation_bateau <-- i
+		selection(tableau, Tab_vide) // on rajoute un espace vide afin d'avoir le nombre correct d'arguments mais celui-ci n'influence pas le code
+		SI joueur1 = VRAI ALORS
+		DEBUT
+			croiseurJ1[i] <-- coordonees
+		SINON
+			croiseurJ2[i] <-- coordonees
+		FINSI
+		affichage(tableau)
+	FINPOUR
+	WtoX(tableau)
+	affichage(tableau)
+
+
+
+
+	POUR j DE 1 A 2 FAIRE
+	BEGIN
+		POUR i DE 1 A 3 FAIRE
+		DEBUT
+			ECRIRE "Veuillez entrer la " + i + "eme case de votre " + j + "eme Contre-Torpilleur (3 cases)"
+			tour_creation_bateau <-- i
+			selection(tableau, Tab_vide) // on rajoute un espace vide afin d'avoir le nombre correct d'arguments mais celui-ci n'influence pas le code
+			SI (joueur1 = VRAI) ET (j = 1) ALORS
+			DEBUT
+				contretorpilleur1J1[i] <-- coordonees
+			SINON
+				SI joueur1 = VRAI ALORS
+				DEBUT
+					contretorpilleur2J1[i] <-- coordonees
+				SINON
+					SI j = 1 ALORS
+					DEBUT
+						contretorpilleur1J2[i] <-- coordonees
+					SINON
+						contretorpilleur2J2[i] <-- coordonees
+					FINSI
+				FINSI
+			FINSI
+			affichage(tableau)
+		FINPOUR
+		WtoX(tableau)
+		affichage(tableau)
+	FINPOUR
+	WtoX(tableau)
+	affichage(tableau)
+
+
+	POUR i <-- 1 to 2 do
+	DEBUT
+		ECRIRE "Veuillez entrer la " + i + "eme case de votre Torpilleur (2 cases)"
+		tour_creation_bateau <-- i
+		selection(tableau, Tab_vide) // on rajoute un espace vide afin d'avoir le nombre correct d'arguments mais celui-ci n'influence pas le code
+		SI joueur1 = VRAI ALORS
+		DEBUT
+			torpilleurJ1[i] <-- coordonees
+		SINON
+			torpilleurJ2[i] <-- coordonees
+		FINSI
+		affichage(tableau)
+	FINPOUR
+	WtoX(tableau)
+	affichage(tableau)
+	ECRIRE"Veuillez appuyer sur entree"
+FIN
+
+
+procedure attaque(VAR mon_tab_selec, ennemi_tab_selec, mon_tab : tab; ma_vie, ennemi_vie : ENTIER; nom : CHAINE);
+
+DEBUT
+	ECRIRE"VOTRE TERRAIN :"
+	affichage(mon_tab_selec)
+	ECRIRE"Cases restantes : " + ma_vie)
+	ECRIRE"---------------------------------------"
+	ECRIRE" "
+	ECRIRE"TERRAIN ADVERSE :"
+	affichage(mon_tab)
+	ECRIRE nom + " quelle case voulez vous viser ?"
+	selection(mon_tab, ennemi_tab_selec)
+	affichage(mon_tab)
+	ECRIRE"Cases ennemies restantes : " + ennemi_vie) //sert de verification
+	ECRIRE"Veuillez appuyer sur Entree"
+FIN
+
+
+
+//PROGRAMME PRINCIPAL********************************
+BEGIN
+
+
+	//on donne 17 vies a chaque joueur car le nombre total de points a toucher est de 17
+	viesJ1 <-- 17
+	viesJ2 <-- 17
+
+
+	//on donne de la vie a chacuns des bateaux du J1
+	porteavionJ1_vies <-- 5
+	croiseurJ1_vies <-- 4
+	contretorpilleur1J1_vies <-- 3
+	contretorpilleur2J1_vies <-- 3
+	torpilleurJ1_vies <-- 2
+
+
+	//on donne de la vie a chacuns des bateaux du J2
+	porteavionJ2_vies <-- 5
+	croiseurJ2_vies <-- 4
+	contretorpilleur1J2_vies <-- 3
+	contretorpilleur2J2_vies <-- 3
+	torpilleurJ2_vies <-- 2
+
+	initialisation(TabJ1_selec)
+	initialisation(TabJ2_selec)
+	//TabJ2_selec[1,1] <-- 'X' // sert juste de verification
+	initialisation(TabJ1)
+	initialisation(TabJ2)
+	
+	
+	noms(nomJ1, nomJ2)
+
+	//*****************$$$$
+	//selection des bateaux
+	intro <-- VRAI
+
+	joueur1 <-- VRAI
+	affichage(Tabj1_selec)
+	ECRIRE"L ecran est au JOUEUR 1')
+	premiere_phase(Tabj1_selec)
+
+
+	ECRIRE"Veuillez passer l ecran au joueur 2"
+
+
+	joueur1 <-- FAUX
+	affichage(Tabj2_selec)
+	ECRIRE"L ecran est au JOUEUR 2')
+	premiere_phase(Tabj2_selec)
+
+	ECRIRE"Veuillez passer l ecran au joueur 1"
+
+
+	//**************************************
+
+	
+
+
+
+
+	//*********************************$$$
+	//jeu principal
+	intro <-- FAUX
+	TANTQUE (viesJ1 > 0)  ET (viesJ2 > 0) FAIRE
+	DEBUT
+		joueur1 <-- VRAI //pour savoir si c est le joueur 1 qui joue
+
+		attaque(TabJ1_selec, TabJ2_selec, TabJ1, viesJ1, viesJ2, nomJ1)
+
+		SI (viesJ2 > 0) ALORS
+		DEBUT
+			ECRIRE"Veuillez passer l ecran au joueur 2"
+
+
+			joueur1 <-- FAUX //pour savoir si c est le joueur 2 qui joue
+
+			attaque(TabJ2_selec, TabJ1_selec, TabJ2, viesJ2, viesJ1, nomJ2)
+
+			SI (viesJ2 > 0) ALORS
+			DEBUT
+				ECRIRE"Veuillez passer l ecran au joueur 1')
+			FINSI
+		FINSI
+	FINTANTQUE
+	//********************************************
+
+	
+
+
+	//ecran de fin
+
+	SI (viesJ1>0) ALORS
+	DEBUT
+		ECRIRE nomJ1 + " l emporte !!!!"
+	SINON
+		ECRIRE nomJ2 + " l emporte !!!!"
+	FINSI
+
+END.

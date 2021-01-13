@@ -1,0 +1,3 @@
+La version 2 est belle et bien fonctionnelle, mais celle-ci fonctionnant parce que j'ai modifié les paramètres de la fonction "setlength" dans le code principal, en l'élevant
+à un de plus que la valeur que je pensais correcte et ne sachant pas si ces changements pourraient faire bugger le programme dans des conditions bien précises, j'ai tout de même
+préférer vous laisser également ma première version.
